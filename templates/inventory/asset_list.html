@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block title %}Assets Catalog - SAMRAP{% endblock %}
+{% block nav_assets %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Resource Catalog</h1>
+        <p class="page-subtitle">Browse and reserve shared inventory assets</p>
+    </div>
+    {% if user.is_admin %}
+    <div>
+        <a href="{% url 'asset_add' %}" class="btn btn-primary">
+            <i data-lucide="plus"></i>
+            <span>Add Asset</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Search and Category Filters -->
+<div class="card" style="padding: 1.25rem; margin-bottom: 2rem;">
+    <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+        
+        <!-- Category Tabs -->
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{% url 'asset_list' %}" class="btn btn-secondary {% if not selected_category %}btn-primary{% endif %}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                All Items
+            </a>
+            {% for cat in categories %}
+            <a href="{% url 'asset_list' %}?category={{ cat.id }}&q={{ query }}" class="btn btn-secondary {% if selected_category == cat.id|slugify %}btn-primary{% endif %}" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                {{ cat.name }} ({{ cat.asset_count }})
+            </a>
+            {% endfor %}
+        </div>
+        
+        <!-- Search bar -->
+        <form method="GET" style="display: flex; gap: 0.5rem; max-width: 320px; width: 100%;">
+            {% if selected_category %}
+                <input type="hidden" name="category" value="{{ selected_category }}">
+            {% endif %}
+            <input type="text" name="q" value="{{ query }}" placeholder="Search assets..." class="form-control" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">
+                <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+            </button>
+        </form>
+        
+    </div>
+</div>
+
+<!-- Asset Catalog Grid -->
+<div class="catalog-grid">
+    {% for item in assets %}
+    <div class="asset-card">
+        <div class="asset-card-body">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <span class="asset-card-category">{{ item.asset.category.name }}</span>
+                <span class="badge badge-{{ item.asset.status|lower }}">{{ item.asset.get_status_display }}</span>
+            </div>
+            
+            <h3 class="asset-card-title">{{ item.asset.name }}</h3>
+            <p class="asset-card-desc">{{ item.asset.description|default:"No specifications provided." }}</p>
+            
+            <div class="asset-card-meta">
+                <div class="asset-qty-badge">
+                    Available: <strong style="color: var(--primary);">{{ item.available }}</strong> / {{ item.asset.total_qty }}
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <!-- QR Code Trigger -->
+                    {% if item.asset.qr_code_url %}
+                    <button class="btn btn-secondary" style="padding: 0.4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center;" 
+                            onclick="openQrModal('{{ item.asset.name }}', '{{ item.asset.qr_code_url }}', '{{ item.asset.id }}')" title="View QR Code">
+                        <i data-lucide="qr-code" style="width: 18px; height: 18px;"></i>
+                    </button>
+                    {% endif %}
+
+                    {% if user.is_admin %}
+                    <a href="{% url 'asset_edit' item.asset.id %}" class="btn btn-secondary" style="padding: 0.4rem; border-radius: 50%;" title="Edit Asset">
+                        <i data-lucide="edit-3" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                    </a>
+                    <a href="{% url 'asset_delete' item.asset.id %}" class="btn btn-secondary" style="padding: 0.4rem; border-radius: 50%;" title="Delete Asset" onclick="return confirm('Are you sure you want to delete {{ item.asset.name }}?')">
+                        <i data-lucide="trash-2" style="width: 18px; height: 18px; color: #f43f5e;"></i>
+                    </a>
+                    {% else %}
+                        {% if item.available > 0 and item.asset.status == 'READY' %}
+                        <button class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.85rem;" 
+                                onclick="openBookingModal('{{ item.asset.id }}', '{{ item.asset.name }}', '{{ item.available }}')">
+                            Request Book
+                        </button>
+                        {% else %}
+                        <button class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.85rem;" disabled>
+                            Unavailable
+                        </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-muted);">
+        <i data-lucide="package-x" style="width: 48px; height: 48px; stroke-width: 1.5; color: var(--text-muted); margin-bottom: 1rem;"></i>
+        <h3>No assets found matching parameters.</h3>
+        <p style="margin-top: 0.5rem;">Try modifying your search or filters.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- QR Code Modal -->
+<div class="modal-overlay" id="qr-modal">
+    <div class="modal-content" style="text-align: center; max-width: 380px;">
+        <div class="modal-header">
+            <h3 style="font-weight: 700; font-size: 1.15rem;" id="qr-modal-title">Asset QR Code</h3>
+            <button class="modal-close" onclick="closeQrModal()">&times;</button>
+        </div>
+        <div style="background: white; padding: 1.5rem; border-radius: var(--radius-md); display: inline-block; margin: 1rem 0; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);">
+            <img id="qr-modal-image" src="" alt="QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;">
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Scan this QR code during equipment checkout or check-in.</p>
+        <a id="qr-modal-link" href="" class="btn btn-primary" style="width: 100%;">Open Scan Page</a>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal-overlay" id="booking-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="font-weight: 700; font-size: 1.25rem;">Request Asset Reservation</h3>
+            <button class="modal-close" onclick="closeBookingModal()">&times;</button>
+        </div>
+        <form id="booking-form" method="POST" action="">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 1.5rem;">
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Asset Name</div>
+                <div style="font-size: 1.15rem; font-weight: 700; color: var(--primary);" id="book-asset-name">Asset</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_quantity">Booking Quantity (Available: <span id="book-asset-avail">0</span>)</label>
+                {{ booking_form.quantity }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_start_date">Reservation Start Date & Time</label>
+                {{ booking_form.start_date }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_end_date">Reservation End Date & Time</label>
+                {{ booking_form.end_date }}
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 2rem;">
+                <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeBookingModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // QR Code Modal operations
+    function openQrModal(name, base64Image, id) {
+        document.getElementById('qr-modal-title').innerText = name + ' QR';
+        document.getElementById('qr-modal-image').src = base64Image;
+        
+        // Dynamic link to action scan page
+        const relativeUrl = "/qr/scan/" + id + "/";
+        document.getElementById('qr-modal-link').href = relativeUrl;
+        
+        document.getElementById('qr-modal').classList.add('active');
+    }
+    
+    function closeQrModal() {
+        document.getElementById('qr-modal').classList.remove('active');
+    }
+
+    // Booking Modal operations
+    function openBookingModal(assetId, name, available) {
+        document.getElementById('book-asset-name').innerText = name;
+        document.getElementById('book-asset-avail').innerText = available;
+        
+        // Dynamically assign forms post url
+        const formActionUrl = "/bookings/request/" + assetId + "/";
+        document.getElementById('booking-form').action = formActionUrl;
+        
+        // Assign input constraints
+        const qtyInput = document.getElementById('id_quantity');
+        qtyInput.max = available;
+        qtyInput.value = 1;
+
+        // Set default dates: start now, end in 2 days
+        const now = new Date();
+        const future = new Date();
+        future.setDate(now.getDate() + 2);
+        
+        // Formating helpers: YYYY-MM-DDTHH:MM
+        const formatDateTime = (date) => {
+            const pad = (n) => n < 10 ? '0' + n : n;
+            return date.getFullYear() + '-' + 
+                   pad(date.getMonth() + 1) + '-' + 
+                   pad(date.getDate()) + 'T' + 
+                   pad(date.getHours()) + ':' + 
+                   pad(date.getMinutes());
+        }
+
+        document.getElementById('id_start_date').value = formatDateTime(now);
+        document.getElementById('id_end_date').value = formatDateTime(future);
+        
+        document.getElementById('booking-modal').classList.add('active');
+    }
+
+    function closeBookingModal() {
+        document.getElementById('booking-modal').classList.remove('active');
+    }
+</script>
+{% endblock %}

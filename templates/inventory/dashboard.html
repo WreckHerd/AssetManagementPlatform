@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - SAMRAP{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Welcome back, {{ user.name }} ({{ user.role }})</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        {% if is_admin %}
+            <a href="{% url 'qr_scanner' %}" class="btn btn-secondary">
+                <i data-lucide="scan-line"></i>
+                <span>Simulate Scanner</span>
+            </a>
+            <a href="{% url 'asset_add' %}" class="btn btn-primary">
+                <i data-lucide="plus-circle"></i>
+                <span>Add Asset</span>
+            </a>
+        {% else %}
+            <a href="{% url 'asset_list' %}" class="btn btn-primary">
+                <i data-lucide="search"></i>
+                <span>Browse Assets</span>
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if is_admin %}
+<!-- Admin Dashboard Views -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-header">
+            <span>Total Assets</span>
+            <i data-lucide="package" style="color: var(--primary)"></i>
+        </div>
+        <div class="metric-value">{{ total_assets }}</div>
+        <div class="metric-footer">Across all council categories</div>
+    </div>
+    
+    <div class="metric-card" style="border-color: rgba(245, 158, 11, 0.2)">
+        <div class="metric-header">
+            <span>Pending Approvals</span>
+            <i data-lucide="clock" style="color: var(--color-pending)"></i>
+        </div>
+        <div class="metric-value" style="color: var(--color-pending)">{{ pending_requests }}</div>
+        <div class="metric-footer">Awaiting review confirmation</div>
+    </div>
+
+    <div class="metric-card" style="border-color: rgba(59, 130, 246, 0.2)">
+        <div class="metric-header">
+            <span>Active Outgoings</span>
+            <i data-lucide="arrow-up-right" style="color: var(--color-issued)"></i>
+        </div>
+        <div class="metric-value" style="color: var(--color-issued)">{{ active_loans }}</div>
+        <div class="metric-footer">Physically checked out units</div>
+    </div>
+
+    <div class="metric-card" style="border-color: rgba(244, 63, 94, 0.2)">
+        <div class="metric-header">
+            <span>Overdue Returns</span>
+            <i data-lucide="alert-triangle" style="color: var(--color-rejected)"></i>
+        </div>
+        <div class="metric-value" style="color: var(--color-rejected)">{{ overdue_loans }}</div>
+        <div class="metric-footer">Exceeded duration limit</div>
+    </div>
+</div>
+
+<div class="split-layout">
+    <!-- Recent Bookings Card -->
+    <div class="card">
+        <h3 class="card-title">
+            <i data-lucide="clipboard-list" style="color: var(--primary)"></i>
+            <span>Recent Booking Actions</span>
+        </h3>
+        <div class="table-responsive">
+            <table class="premium-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Asset</th>
+                        <th>Quantity</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in recent_bookings %}
+                    <tr>
+                        <td>{{ booking.user.username }}</td>
+                        <td style="font-weight: 600;">{{ booking.asset.name }}</td>
+                        <td>{{ booking.quantity }}</td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ booking.end_date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="badge badge-{{ booking.status|lower }}">
+                                {{ booking.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted);">No bookings found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top: 1rem; text-align: right;">
+            <a href="{% url 'admin_requests' %}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">View Request Portal &rarr;</a>
+        </div>
+    </div>
+
+    <!-- Recent Audit Logs -->
+    <div class="card">
+        <h3 class="card-title">
+            <i data-lucide="shield-check" style="color: var(--primary)"></i>
+            <span>Recent Security Logs</span>
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for log in recent_logs %}
+            <div style="padding: 0.75rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                    <span style="font-weight: 600; color: var(--primary);">{{ log.action }}</span>
+                    <span style="color: var(--text-muted); font-size: 0.75rem;">{{ log.created_at|date:"H:i A" }}</span>
+                </div>
+                <div style="color: var(--text-secondary);">By {% if log.user %}{{ log.user.username }}{% else %}System{% endif %}</div>
+            </div>
+            {% empty %}
+            <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">No audit logs yet.</p>
+            {% endfor %}
+        </div>
+        <div style="margin-top: 1rem; text-align: right;">
+            <a href="{% url 'audit_logs' %}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">View All System Logs &rarr;</a>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- User Dashboard Views -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-header">
+            <span>Total Bookings</span>
+            <i data-lucide="calendar" style="color: var(--primary)"></i>
+        </div>
+        <div class="metric-value">{{ bookings_count }}</div>
+        <div class="metric-footer">Lifetime resource requests</div>
+    </div>
+    
+    <div class="metric-card" style="border-color: rgba(245, 158, 11, 0.2)">
+        <div class="metric-header">
+            <span>Pending Approvals</span>
+            <i data-lucide="clock" style="color: var(--color-pending)"></i>
+        </div>
+        <div class="metric-value" style="color: var(--color-pending)">{{ pending_requests.count }}</div>
+        <div class="metric-footer">Awaiting Admin check</div>
+    </div>
+
+    <div class="metric-card" style="border-color: rgba(59, 130, 246, 0.2)">
+        <div class="metric-header">
+            <span>Active checkouts</span>
+            <i data-lucide="arrow-up-right" style="color: var(--color-issued)"></i>
+        </div>
+        <div class="metric-value" style="color: var(--color-issued)">{{ active_loans.count }}</div>
+        <div class="metric-footer">Items in your possession</div>
+    </div>
+
+    <div class="metric-card" style="border-color: rgba(244, 63, 94, 0.2)">
+        <div class="metric-header">
+            <span>Overdue Warnings</span>
+            <i data-lucide="alert-triangle" style="color: var(--color-rejected)"></i>
+        </div>
+        <div class="metric-value" style="color: var(--color-rejected)">{{ overdue_loans.count }}</div>
+        <div class="metric-footer">Please return assets soon</div>
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="card-title">
+        <i data-lucide="history" style="color: var(--primary)"></i>
+        <span>My Recent Bookings</span>
+    </h3>
+    <div class="table-responsive">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th>Qty</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Admin Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in recent_bookings %}
+                <tr>
+                    <td style="font-weight: 600;">{{ booking.asset.name }}</td>
+                    <td>{{ booking.quantity }}</td>
+                    <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ booking.start_date|date:"M d, Y - H:i" }}</td>
+                    <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ booking.end_date|date:"M d, Y - H:i" }}</td>
+                    <td>
+                        <span class="badge badge-{{ booking.status|lower }}">
+                            {{ booking.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if booking.admin_comment %}
+                            <span style="font-size: 0.85rem; font-style: italic; color: var(--text-secondary);">"{{ booking.admin_comment }}"</span>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted);">You haven't requested any bookings yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div style="margin-top: 1.5rem; text-align: right;">
+        <a href="{% url 'booking_list' %}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">View Complete History &rarr;</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

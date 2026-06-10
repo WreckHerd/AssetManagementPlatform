@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Register - SAMRAP{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2 class="auth-title">Create Account</h2>
+            <p class="auth-subtitle">Join Roorkee Cultural Council Assets Manager</p>
+        </div>
+        
+        <form method="POST" autocomplete="off">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="id_username">Username</label>
+                {{ form.username }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_email">Email Address</label>
+                {{ form.email }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_name">Full Name</label>
+                {{ form.name }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_role">Account Role (Testing Friendly)</label>
+                {{ form.role }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_password">Password</label>
+                {{ form.password }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_password_confirm">Confirm Password</label>
+                {{ form.password_confirm }}
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                Register Account
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            Already have an account? <a href="{% url 'login' %}">Login here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
