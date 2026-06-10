@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SAMRAP - Asset Management{% endblock %}</title>
+    <!-- Fonts -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    
+    <!-- Messages Notifications -->
+    <div class="messages-container" id="messages-container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message-alert {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+                    <span>{{ message }}</span>
+                    <button class="modal-close" style="font-size: 1rem; color: #ffffff;" onclick="this.parentElement.remove()">&times;</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        {% if user.is_authenticated %}
+        <aside class="sidebar">
+            <div class="logo-container">
+                <div class="logo-icon">C</div>
+                <div class="logo-text">SAMRAP</div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <!-- Dashboard / Catalog -->
+                <a href="{% url 'dashboard' %}" class="nav-item {% block nav_dashboard %}{% endblock %}">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                
+                <a href="{% url 'asset_list' %}" class="nav-item {% block nav_assets %}{% endblock %}">
+                    <i data-lucide="package"></i>
+                    <span>Assets Catalog</span>
+                </a>
+
+                <a href="{% url 'booking_list' %}" class="nav-item {% block nav_bookings %}{% endblock %}">
+                    <i data-lucide="calendar"></i>
+                    <span>My Bookings</span>
+                </a>
+
+                {% if user.is_admin %}
+                <!-- Admin specific navigation -->
+                <div style="margin: 1.5rem 0 0.5rem 0.5rem; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Admin Control</div>
+                
+                <a href="{% url 'admin_requests' %}" class="nav-item {% block nav_admin_requests %}{% endblock %}">
+                    <i data-lucide="clipboard-list"></i>
+                    <span>Request Approvals</span>
+                </a>
+                
+                <a href="{% url 'analytics' %}" class="nav-item {% block nav_analytics %}{% endblock %}">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span>Analytics View</span>
+                </a>
+                
+                <a href="{% url 'audit_logs' %}" class="nav-item {% block nav_audit_logs %}{% endblock %}">
+                    <i data-lucide="shield-alert"></i>
+                    <span>Audit Logs</span>
+                </a>
+                {% endif %}
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile-summary">
+                    <div class="user-avatar">
+                        {{ user.username|slice:":2"|upper }}
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">{{ user.username }}</span>
+                        <span class="user-role">{{ user.get_role_display }}</span>
+                    </div>
+                </div>
+                <a href="{% url 'logout' %}" class="btn-logout">
+                    <i data-lucide="log-out"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Workspace -->
+        <main class="main-wrapper" style="{% if not user.is_authenticated %}margin-left: 0; padding: 0;{% endif %}">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Lucide Icons Library -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+        
+        // Auto fade out messages
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.message-alert');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-20px)';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
