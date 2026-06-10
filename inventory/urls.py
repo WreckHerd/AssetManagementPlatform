@@ -21,7 +21,7 @@ urlpatterns = [
     path('bookings/request/<int:asset_id>/', views.booking_request_view, name='booking_request'),
 
     # Admin actions & tracking
-    path('admin/requests/', views.admin_requests_view, name='admin_requests'),
+    path('approvals/', views.admin_requests_view, name='admin_requests'),
     path('bookings/<int:pk>/action/<str:action>/', views.booking_action_view, name='booking_action'),
     
     # Analytics & Audit Logs
