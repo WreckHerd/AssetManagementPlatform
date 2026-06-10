@@ -11,9 +11,11 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.USER
     )
+    name = models.CharField(max_length=150, blank=True)
 
     def is_admin(self):
         return self.role == self.Role.ADMIN
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)

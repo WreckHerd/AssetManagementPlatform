@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block title %}Asset Scan - {{ asset.name }} - SAMRAP{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Asset Tag Scan</h1>
+        <p class="page-subtitle">Decoded asset unit identity and live condition report</p>
+    </div>
+    <div>
+        <a href="{% url 'qr_scanner' %}" class="btn btn-secondary">
+            <i data-lucide="scan-line"></i>
+            <span>Back to Scanner</span>
+        </a>
+    </div>
+</div>
+
+<div class="split-layout">
+    
+    <!-- Left Column: Asset Identity & Actions -->
+    <div>
+        <!-- Asset details card -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <span class="badge badge-issued" style="text-transform: uppercase; font-family: monospace;">UUID: {{ asset.id|slice:":8" }}</span>
+                <span class="badge badge-{{ asset.status|lower }}">{{ asset.get_status_display }}</span>
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">{{ asset.name }}</h2>
+            <div style="font-size: 0.9rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem;">Category: {{ asset.category.name }}</div>
+            <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.5rem;">{{ asset.description|default:"No description provided." }}</p>
+            
+            <div style="display: flex; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                <div class="metric-card" style="flex: 1; padding: 1rem; margin-bottom: 0; box-shadow: none;">
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Available Units</div>
+                    <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary);">{{ available }}</div>
+                </div>
+                <div class="metric-card" style="flex: 1; padding: 1rem; margin-bottom: 0; box-shadow: none;">
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Total Owned</div>
+                    <div style="font-size: 1.75rem; font-weight: 700;">{{ asset.total_qty }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Simulation Panel -->
+        {% if user.is_admin %}
+        <div class="card" style="border-color: var(--border-highlight);">
+            <h3 class="card-title" style="color: var(--primary);">
+                <i data-lucide="scan-face"></i>
+                <span>Simulated Admin Actions</span>
+            </h3>
+            
+            <!-- Quick Issue Option -->
+            {% if available > 0 and asset.status == 'READY' %}
+            <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border-color);">
+                <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">Simulate Quick Check-out (Issue)</h4>
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="quick_issue">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Borrower's Username</label>
+                            <input type="text" name="username" class="form-control" placeholder="e.g. pratyush" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" name="qty" min="1" max="{{ available }}" value="1" class="form-control" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                        Check Out Asset Now
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Quick Return Option -->
+            <div>
+                <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">Simulate Quick Check-in (Return)</h4>
+                {% if active_bookings %}
+                <form method="POST" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="quick_return">
+                    <div class="form-group">
+                        <label class="form-label">Select Active Checkout to Return</label>
+                        <select name="booking_id" class="form-control" required>
+                            {% for b in active_bookings %}
+                            <option value="{{ b.id }}">{{ b.user.username }} (Qty: {{ b.quantity }}) - Checked out: {{ b.issued_at|date:"M d, H:i" }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem; align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Condition</label>
+                            <select name="condition" class="form-control" required>
+                                <option value="Good">Good</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Damaged">Damaged</option>
+                                <option value="Unusable">Unusable</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Condition Remarks</label>
+                            <input type="text" name="notes" placeholder="e.g. Scratches on lens cap" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-secondary" style="width: 100%; margin-top: 1.25rem; border-color: var(--color-returned); color: var(--color-returned);">
+                        Record Return Check-in
+                    </button>
+                </form>
+                {% else %}
+                <p style="color: var(--text-muted); font-size: 0.9rem;">There are no active checked-out bookings for this asset unit.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Column: Health & Condition History -->
+    <div class="card">
+        <h3 class="card-title">
+            <i data-lucide="shield-alert" style="color: var(--primary)"></i>
+            <span>Asset Condition History</span>
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            {% for record in recent_health %}
+            <div style="border-left: 3px solid {% if record.condition == 'Good' %}var(--color-ready){% elif record.condition == 'Fair' %}var(--color-issued){% else %}var(--color-rejected){% endif %}; padding-left: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <span class="badge badge-{% if record.condition == 'Good' %}ready{% elif record.condition == 'Fair' %}issued{% else %}rejected{% endif %}" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;">
+                        {{ record.condition }}
+                    </span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">{{ record.created_at|date:"M d, Y" }}</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">{{ record.notes|default:"No description recorded." }}</p>
+            </div>
+            {% empty %}
+            <p style="text-align: center; color: var(--text-muted); padding: 2rem;">No condition logs registered yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

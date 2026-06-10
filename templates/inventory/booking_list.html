@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}My Bookings - SAMRAP{% endblock %}
+{% block nav_bookings %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">My Bookings</h1>
+        <p class="page-subtitle">Track status and checkout duration of your resource reservations</p>
+    </div>
+    <div>
+        <a href="{% url 'asset_list' %}" class="btn btn-primary">
+            <i data-lucide="plus"></i>
+            <span>Reserve New Asset</span>
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="card-title">
+        <i data-lucide="calendar" style="color: var(--primary)"></i>
+        <span>Booking Logs</span>
+    </h3>
+    <div class="table-responsive">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Response Details</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ booking.asset.name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Request ID: #{{ booking.id|slice:":8" }}</div>
+                    </td>
+                    <td>{{ booking.asset.category.name }}</td>
+                    <td><span style="font-weight: 600;">{{ booking.quantity }}</span></td>
+                    <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ booking.start_date|date:"M d, Y - H:i" }}</td>
+                    <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ booking.end_date|date:"M d, Y - H:i" }}</td>
+                    <td>
+                        <span class="badge badge-{{ booking.status|lower }}">
+                            {{ booking.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if booking.status == 'REJECTED' or booking.status == 'APPROVED' %}
+                            {% if booking.admin_comment %}
+                                <span style="font-size: 0.85rem; font-style: italic; color: var(--text-secondary);">"{{ booking.admin_comment }}"</span>
+                            {% else %}
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Approved by Admin</span>
+                            {% endif %}
+                        {% elif booking.status == 'ISSUED' %}
+                            <span style="font-size: 0.85rem; color: var(--color-issued); font-weight: 500;">Checked Out: {{ booking.issued_at|date:"M d, H:i" }}</span>
+                        {% elif booking.status == 'RETURNED' %}
+                            <span style="font-size: 0.85rem; color: var(--color-returned);">Returned: {{ booking.returned_at|date:"M d, H:i" }}</span>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if booking.status == 'PENDING' %}
+                        <a href="{% url 'booking_action' booking.id 'cancel' %}" class="btn btn-danger" 
+                           style="padding: 0.35rem 0.75rem; font-size: 0.8rem;"
+                           onclick="return confirm('Are you sure you want to cancel this reservation request?')">
+                            Cancel
+                        </a>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">No actions</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                        You have no booking requests.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

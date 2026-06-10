@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% block title %}Operational Analytics - SAMRAP{% endblock %}
+{% block nav_analytics %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Operational Analytics</h1>
+        <p class="page-subtitle">Track resource utilization, demand indicators, and lending trends</p>
+    </div>
+</div>
+
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-header">
+            <span>Total Bookings Placed</span>
+            <i data-lucide="bar-chart-2" style="color: var(--primary)"></i>
+        </div>
+        <div class="metric-value">{{ total_bookings }}</div>
+        <div class="metric-footer">Across the platform history</div>
+    </div>
+    
+    <div class="metric-card" style="border-color: rgba(16, 185, 129, 0.2)">
+        <div class="metric-header">
+            <span>Completed Returns</span>
+            <i data-lucide="check-circle" style="color: var(--color-ready)"></i>
+        </div>
+        <div class="metric-value" style="color: var(--color-ready)">{{ completed_returns }}</div>
+        <div class="metric-footer">Assets successfully checked back in</div>
+    </div>
+
+    <div class="metric-card" style="border-color: rgba(59, 130, 246, 0.2)">
+        <div class="metric-header">
+            <span>Active Outgoings</span>
+            <i data-lucide="arrow-up-right" style="color: var(--color-issued)"></i>
+        </div>
+        <div class="metric-value" style="color: var(--color-issued)">{{ active_issuances }}</div>
+        <div class="metric-footer">Current field deployments</div>
+    </div>
+
+    <div class="metric-card" style="border-color: rgba(244, 63, 94, 0.2)">
+        <div class="metric-header">
+            <span>Overdue Returns</span>
+            <i data-lucide="alert-triangle" style="color: var(--color-rejected)"></i>
+        </div>
+        <div class="metric-value" style="color: var(--color-rejected)">{{ overdue_returns }}</div>
+        <div class="metric-footer">Requires administrator return calls</div>
+    </div>
+</div>
+
+<!-- Charts Panel -->
+<div class="split-layout">
+    
+    <!-- Weekly Bookings Trend Chart -->
+    <div class="card">
+        <h3 class="card-title">
+            <i data-lucide="trending-up" style="color: var(--primary)"></i>
+            <span>Weekly Bookings Trend</span>
+        </h3>
+        <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="weeklyTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Category Distribution Chart -->
+    <div class="card">
+        <h3 class="card-title">
+            <i data-lucide="pie-chart" style="color: var(--primary)"></i>
+            <span>Inventory by Category</span>
+        </h3>
+        <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+    
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <h3 class="card-title">
+        <i data-lucide="award" style="color: var(--primary)"></i>
+        <span>High-Demand Asset Rankings</span>
+    </h3>
+    <div style="position: relative; height: 320px; width: 100%;">
+        <canvas id="utilizationRankChart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Parse JSON datasets from Django context
+    const ranksData = JSON.parse('{{ ranks_json|safe }}');
+    const categoryData = JSON.parse('{{ category_json|safe }}');
+    const weeklyData = JSON.parse('{{ weekly_json|safe }}');
+
+    // Chart Global Defaults for Premium Look
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+
+    // 1. Weekly Trend Line Chart
+    new Chart(document.getElementById('weeklyTrendChart'), {
+        type: 'line',
+        data: {
+            labels: weeklyData.map(item => item.date),
+            datasets: [{
+                label: 'Bookings Created',
+                data: weeklyData.map(item => item.count),
+                borderColor: '#00e5ff',
+                backgroundColor: 'rgba(0, 229, 255, 0.05)',
+                borderWidth: 3,
+                tension: 0.3,
+                fill: true,
+                pointBackgroundColor: '#00e5ff',
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { precision: 0 }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // 2. Category Pie Chart
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: categoryData.map(item => item.category__name),
+            datasets: [{
+                data: categoryData.map(item => item.total_quantity),
+                backgroundColor: [
+                    '#00e5ff',
+                    '#3b82f6',
+                    '#8b5cf6',
+                    '#10b981',
+                    '#f59e0b',
+                    '#f43f5e'
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 12, padding: 15 }
+                }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // 3. Utilization Bar Chart
+    new Chart(document.getElementById('utilizationRankChart'), {
+        type: 'bar',
+        data: {
+            labels: ranksData.map(item => item.asset__name),
+            datasets: [{
+                label: 'Total Bookings',
+                data: ranksData.map(item => item.booking_count),
+                backgroundColor: 'rgba(0, 229, 255, 0.85)',
+                hoverBackgroundColor: '#00e5ff',
+                borderRadius: 4,
+                barThickness: 24
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { precision: 0 }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

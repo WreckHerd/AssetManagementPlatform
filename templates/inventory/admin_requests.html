@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% block title %}Request Approvals - SAMRAP{% endblock %}
+{% block nav_admin_requests %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Resource Approvals & Loans</h1>
+        <p class="page-subtitle">Manage booking requests, check-outs (issuance), and check-ins (returns)</p>
+    </div>
+    <div>
+        <a href="{% url 'qr_scanner' %}" class="btn btn-primary">
+            <i data-lucide="scan"></i>
+            <span>Scan QR for quick actions</span>
+        </a>
+    </div>
+</div>
+
+<!-- SECTION 1: PENDING REQUESTS -->
+<div class="card" style="margin-bottom: 2.5rem;">
+    <h3 class="card-title" style="color: var(--color-pending);">
+        <i data-lucide="clock"></i>
+        <span>Pending Approval ({{ pending.count }})</span>
+    </h3>
+    <div class="table-responsive">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Asset Details</th>
+                    <th>Requested Qty</th>
+                    <th>Requested Timeline</th>
+                    <th>Actions & Comments</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in pending %}
+                <tr>
+                    <td>
+                        <strong style="color: var(--text-primary);">{{ b.user.username }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ b.user.email }}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;">{{ b.asset.name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--primary);">Category: {{ b.asset.category.name }}</div>
+                    </td>
+                    <td><span style="font-weight: 600;">{{ b.quantity }}</span></td>
+                    <td style="font-size: 0.85rem; color: var(--text-secondary);">
+                        <div>Start: {{ b.start_date|date:"M d, Y - H:i" }}</div>
+                        <div>End: {{ b.end_date|date:"M d, Y - H:i" }}</div>
+                    </td>
+                    <td>
+                        <!-- Form with comment and approve/reject actions -->
+                        <form method="POST" action="" style="display: flex; gap: 0.5rem; align-items: center; max-width: 460px;">
+                            {% csrf_token %}
+                            <input type="text" name="admin_comment" placeholder="Add optional admin review comment..." class="form-control" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; flex-grow: 1;">
+                            <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.75rem; font-size: 0.8rem;" 
+                                    formaction="{% url 'booking_action' b.id 'approve' %}">
+                                Approve
+                            </button>
+                            <button type="submit" class="btn btn-danger" style="padding: 0.4rem 0.75rem; font-size: 0.8rem;"
+                                    formaction="{% url 'booking_action' b.id 'reject' %}">
+                                Reject
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        No pending requests awaiting approval.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- SECTION 2: ACTIVE CHECKED-OUT LOANS -->
+<div class="card" style="margin-bottom: 2.5rem; border-color: rgba(59, 130, 246, 0.2);">
+    <h3 class="card-title" style="color: var(--color-issued);">
+        <i data-lucide="arrow-up-right"></i>
+        <span>Active Checked-Out Loans ({{ active_loans.count }})</span>
+    </h3>
+    <div class="table-responsive">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Asset Details</th>
+                    <th>Borrowed Qty</th>
+                    <th>Timeline & Deadlines</th>
+                    <th>Check-in Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in active_loans %}
+                <tr>
+                    <td>
+                        <strong style="color: var(--text-primary);">{{ b.user.username }}</strong>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;">{{ b.asset.name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Issued at: {{ b.issued_at|date:"M d, H:i" }}</div>
+                    </td>
+                    <td><span style="font-weight: 600;">{{ b.quantity }}</span></td>
+                    <td style="font-size: 0.85rem; color: var(--text-secondary);">
+                        <div>Due: {{ b.end_date|date:"M d, Y - H:i" }}</div>
+                        <!-- Highlight overdue -->
+                        {% if b.end_date < timezone.now %}
+                            <div style="color: var(--color-rejected); font-weight: 600; font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem; margin-top: 0.25rem;">
+                                <i data-lucide="alert-circle" style="width: 12px; height: 12px;"></i> OVERDUE
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <!-- Return/Check-in action form -->
+                        <form method="POST" action="{% url 'booking_action' b.id 'return' %}" style="display: flex; gap: 0.5rem; align-items: center;">
+                            {% csrf_token %}
+                            <select name="condition" class="form-control" style="padding: 0.4rem 0.5rem; font-size: 0.8rem; width: 110px;">
+                                <option value="Good">Good</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Damaged">Damaged</option>
+                                <option value="Unusable">Unusable</option>
+                            </select>
+                            <input type="text" name="notes" placeholder="Condition remarks..." class="form-control" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; width: 160px;">
+                            <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.8rem; border-color: var(--color-returned); color: var(--color-returned);">
+                                Check-in
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        No assets currently checked out.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- SECTION 3: REQUEST LOG HISTORY -->
+<div class="card">
+    <h3 class="card-title">
+        <i data-lucide="history"></i>
+        <span>Recent Activity History (Last 20)</span>
+    </h3>
+    <div class="table-responsive">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Asset</th>
+                    <th>Qty</th>
+                    <th>Dates</th>
+                    <th>State</th>
+                    <th>Admin Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in history %}
+                <tr>
+                    <td>{{ b.user.username }}</td>
+                    <td style="font-weight: 600;">{{ b.asset.name }}</td>
+                    <td>{{ b.quantity }}</td>
+                    <td style="font-size: 0.8rem; color: var(--text-secondary);">
+                        <div>Requested: {{ b.created_at|date:"M d, H:i" }}</div>
+                        {% if b.status == 'RETURNED' %}
+                            <div>Returned: {{ b.returned_at|date:"M d, H:i" }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ b.status|lower }}">{{ b.status }}</span>
+                    </td>
+                    <td>
+                        {% if b.status == 'APPROVED' %}
+                            <!-- Action button to mark as ISSUED (checked out) -->
+                            <a href="{% url 'booking_action' b.id 'issue' %}" class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                                Check-out Asset
+                            </a>
+                        {% elif b.admin_comment %}
+                            <span style="font-style: italic; font-size: 0.85rem; color: var(--text-secondary);">"{{ b.admin_comment }}"</span>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted);">No activity history records.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

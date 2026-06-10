@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - SAMRAP{% endblock %}
+{% block nav_assets %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ title }}</h1>
+        <p class="page-subtitle">Configure asset stock metadata and status levels</p>
+    </div>
+    <div>
+        <a href="{% url 'asset_list' %}" class="btn btn-secondary">
+            <i data-lucide="arrow-left"></i>
+            <span>Back to Catalog</span>
+        </a>
+    </div>
+</div>
+
+<div class="split-layout">
+    <div class="card">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="id_name">Asset Name</label>
+                {{ form.name }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_category">Category</label>
+                {{ form.category }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_total_qty">Total Quantity Owned</label>
+                {{ form.total_qty }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_status">Status</label>
+                {{ form.status }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_description">Description / Specifications</label>
+                {{ form.description }}
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 2rem;">
+                <a href="{% url 'asset_list' %}" class="btn btn-secondary" style="flex: 1; text-align: center;">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Asset</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h3 class="card-title">
+            <i data-lucide="help-circle" style="color: var(--primary)"></i>
+            <span>Asset Guidelines</span>
+        </h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); text-align: left; line-height: 1.5; margin-bottom: 1rem;">
+            Ensure the asset name is descriptive and contains relevant model details (e.g. <i>"Sony Alpha 7 IV DSLR"</i>).
+        </p>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); text-align: left; line-height: 1.5; margin-bottom: 1rem;">
+            When updating quantities, please ensure it does not conflict with active bookings that are already checked out.
+        </p>
+        {% if asset and asset.qr_code_url %}
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-top: 1.5rem;">
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.75rem;">Generated QR Key</div>
+            <div style="background: white; padding: 1rem; border-radius: var(--radius-sm); display: inline-block;">
+                <img src="{{ asset.qr_code_url }}" alt="QR Code" style="width: 120px; height: 120px;">
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

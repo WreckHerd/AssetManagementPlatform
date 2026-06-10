@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}System Audit Logs - SAMRAP{% endblock %}
+{% block nav_audit_logs %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">System Audit Logs</h1>
+        <p class="page-subtitle">Historical records of all system state changes and admin transactions</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="card-title">
+        <i data-lucide="shield" style="color: var(--primary)"></i>
+        <span>Security Ledger</span>
+    </h3>
+    <div class="table-responsive">
+        <table class="premium-table">
+            <thead>
+                <tr>
+                    <th style="width: 180px;">Timestamp</th>
+                    <th style="width: 150px;">Operator</th>
+                    <th style="width: 180px;">Action Trigger</th>
+                    <th>Log Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td style="font-size: 0.85rem; color: var(--text-secondary);">
+                        {{ log.created_at|date:"M d, Y - H:i:s" }}
+                    </td>
+                    <td>
+                        {% if log.user %}
+                            <strong style="color: var(--text-primary);">{{ log.user.username }}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ log.user.role }}</div>
+                        {% else %}
+                            <span style="color: var(--text-muted); font-style: italic;">System</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-issued" style="border-radius: var(--radius-sm); font-family: monospace;">
+                            {{ log.action }}
+                        </span>
+                    </td>
+                    <td style="font-family: monospace; font-size: 0.8rem; color: var(--text-secondary); max-width: 400px; word-break: break-all;">
+                        {{ log.details }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                        No audit logs captured.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
