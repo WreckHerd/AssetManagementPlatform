@@ -1,6 +1,6 @@
 # Smart Asset Management & Resource Allocation Platform (SAMRAP)
 
-SAMRAP is a full-stack, premium-aesthetic asset management and resource allocation web application designed specifically to solve inventory tracking, booking coordination, and lending workflows for the **Cultural Council of IIT Roorkee**.
+SAMRAP is a full-stack, asset management and resource allocation web application designed specifically to solve inventory tracking, booking coordination, and lending workflows.
 
 ---
 
