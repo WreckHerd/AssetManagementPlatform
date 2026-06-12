@@ -4,7 +4,7 @@ SAMRAP is a general-purpose, full-stack, premium-aesthetic asset management and 
 
 ---
 
-## 🚀 Key Features
+##  Key Features
 
 *   **Secure Authentication & RBAC:** Session-based authentication with distinct dashboards and route permissions for `ADMIN` and `USER` roles. Users can select their roles upon sign-up (dev-friendly simulation).
 *   **Asset Discovery Catalog:** Real-time search and category filtering of assets (DSLR cameras, lights, mics, costumes, stage props). It displays live availability status and quantities.
@@ -17,7 +17,7 @@ SAMRAP is a general-purpose, full-stack, premium-aesthetic asset management and 
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 *   **Backend & Frontend:** Django (Python 3.10+) utilizing class-based views, forms, and the built-in templating engine.
 *   **Database:** SQLite — portable, relational database file (`db.sqlite3`) supporting foreign key integrity and transactional locking.
@@ -29,7 +29,7 @@ SAMRAP is a general-purpose, full-stack, premium-aesthetic asset management and 
 
 ---
 
-## ⚙️ Setup & Installation
+## Setup & Installation
 
 ### Option A: Running Locally (Recommended)
 
@@ -85,7 +85,7 @@ SAMRAP is a general-purpose, full-stack, premium-aesthetic asset management and 
 
 ---
 
-## 🧪 Running Automated Tests
+## Running Automated Tests
 
 Run the test suite covering authentication paths, role-based access rules, check-out/check-in states, and overlap booking validation logic:
 ```bash
@@ -94,13 +94,13 @@ python manage.py test
 
 ---
 
-## 🎬 Demonstration Video
+## Demonstration Video
 
 👉 **[Watch the Demonstration Video on YouTube](https://youtu.be/Zej2gloxwcI)**
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 ├── Dockerfile                  # Production container packaging
