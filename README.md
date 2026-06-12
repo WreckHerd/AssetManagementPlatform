@@ -1,13 +1,13 @@
 # Smart Asset Management & Resource Allocation Platform (SAMRAP)
 
-SAMRAP is a full-stack, asset management and resource allocation web application designed specifically to solve inventory tracking, booking coordination, and lending workflows.
+SAMRAP is a general-purpose, full-stack, premium-aesthetic asset management and resource allocation web application designed specifically to solve inventory tracking, booking coordination, and lending workflows for organizations, clubs, events, and resource-sharing councils.
 
 ---
 
 ## 🚀 Key Features
 
 *   **Secure Authentication & RBAC:** Session-based authentication with distinct dashboards and route permissions for `ADMIN` and `USER` roles. Users can select their roles upon sign-up (dev-friendly simulation).
-*   **Asset Discovery Catalog:** Real-time search and category filtering of council assets (DSLR cameras, lights, mics, costumes, stage props). It displays live availability status and quantities.
+*   **Asset Discovery Catalog:** Real-time search and category filtering of assets (DSLR cameras, lights, mics, costumes, stage props). It displays live availability status and quantities.
 *   **Transaction-Safe Booking Engine:** Double-booking prevention algorithm using database transactions (`transaction.atomic`) and row-locking (`select_for_update`). It calculates overlapping timelines to prevent stock over-allocations.
 *   **Approvals & Issuance Workflow:** Admins can review, approve, or reject booking requests with comments. Approved requests can be checked out (issued) and checked back in (returned) with automated inventory adjustment.
 *   **Asset Health & Condition Tracking:** Logs condition states (Good, Fair, Damaged, Unusable) and notes during check-ins to maintain individual asset lifecycle health.
@@ -21,7 +21,7 @@ SAMRAP is a full-stack, asset management and resource allocation web application
 
 *   **Backend & Frontend:** Django (Python 3.10+) utilizing class-based views, forms, and the built-in templating engine.
 *   **Database:** SQLite — portable, relational database file (`db.sqlite3`) supporting foreign key integrity and transactional locking.
-*   **Styling:** Vanilla CSS — custom designed with CSS variables to establish a modern, sleek, dark-themed glassmorphism interface (featuringOutfit and Plus Jakarta Sans typography).
+*   **Styling:** Vanilla CSS — custom designed with CSS variables to establish a modern, sleek, dark-themed glassmorphism interface (featuring Outfit and Plus Jakarta Sans typography).
 *   **Icons:** Lucide Icons.
 *   **Visualization:** Chart.js (included via lightweight CDN integration).
 *   **QR Generation:** `qrcode` python library.
@@ -36,7 +36,7 @@ SAMRAP is a full-stack, asset management and resource allocation web application
 1.  **Clone the Repository & Navigate to Workspace:**
     ```bash
     git clone <repository_url>
-    cd cult-dev-proj
+    cd AssetManagementPlatform
     ```
 
 2.  **Create & Activate Virtual Environment:**
@@ -59,8 +59,8 @@ SAMRAP is a full-stack, asset management and resource allocation web application
     ```bash
     python manage.py seed_inventory
     ```
-    *   *Default Admin:* username: `admin` | password: `adminpass`
-    *   *Default User:* username: `user` | password: `userpass`
+    *   *Default Admin:* username: `admin` | password: `adminpass` | email: `admin@example.com`
+    *   *Default User:* username: `user` | password: `userpass` | email: `user@example.com`
 
 6.  **Run Development Server:**
     ```bash
@@ -91,6 +91,14 @@ Run the test suite covering authentication paths, role-based access rules, check
 ```bash
 python manage.py test
 ```
+
+---
+
+## 🎬 Demonstration Video
+
+A comprehensive video demonstration of SAMRAP (max 3 minutes), showcasing user authentication, booking requests, conflict overlap prevention, admin approvals, QR code scanner simulations, and analytics dashboard functions:
+
+👉 **[Watch the Demonstration Video on YouTube](https://www.youtube.com/watch?v=placeholder)** *(Replace with your actual YouTube link)*
 
 ---
 

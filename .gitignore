@@ -7,4 +7,5 @@ db.sqlite3
 .vscode/
 static_collected/
 staticfiles/
+specs/
 *.log

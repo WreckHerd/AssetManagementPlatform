@@ -5,7 +5,7 @@ from inventory.models import Category, Asset, AssetHealth
 User = get_user_model()
 
 class Command(BaseCommand):
-    help = "Seeds the database with default Cultural Council categories, items, and test users."
+    help = "Seeds the database with default categories, items, and test users."
 
     def handle(self, *args, **options):
         self.stdout.write("Seeding database...")
@@ -21,18 +21,18 @@ class Command(BaseCommand):
         self.stdout.write("Creating default credentials...")
         admin = User.objects.create_user(
             username="admin",
-            email="admin@iitr.ac.in",
+            email="admin@example.com",
             password="adminpass",
-            name="Council Admin",
+            name="System Admin",
             role=User.Role.ADMIN
         )
         self.stdout.write("Created Admin: username 'admin', password 'adminpass'")
 
         user = User.objects.create_user(
             username="user",
-            email="user@iitr.ac.in",
+            email="user@example.com",
             password="userpass",
-            name="Council Member",
+            name="General User",
             role=User.Role.USER
         )
         self.stdout.write("Created User: username 'user', password 'userpass'")
