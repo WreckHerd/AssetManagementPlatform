@@ -96,9 +96,7 @@ python manage.py test
 
 ## 🎬 Demonstration Video
 
-A comprehensive video demonstration of SAMRAP (max 3 minutes), showcasing user authentication, booking requests, conflict overlap prevention, admin approvals, QR code scanner simulations, and analytics dashboard functions:
-
-👉 **[Watch the Demonstration Video on YouTube](https://www.youtube.com/watch?v=placeholder)** *(Replace with your actual YouTube link)*
+👉 **[Watch the Demonstration Video on YouTube](https://youtu.be/Zej2gloxwcI)**
 
 ---
 
