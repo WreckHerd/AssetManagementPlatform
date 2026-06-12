@@ -4,6 +4,15 @@ SAMRAP is a general-purpose, full-stack, premium-aesthetic asset management and 
 
 ---
 
+---
+
+## Demonstration Video
+
+👉 **[Watch the Demonstration Video on YouTube](https://youtu.be/Zej2gloxwcI)**
+
+---
+## See design_document.pdf above 
+
 ##  Key Features
 
 *   **Secure Authentication & RBAC:** Session-based authentication with distinct dashboards and route permissions for `ADMIN` and `USER` roles. Users can select their roles upon sign-up (dev-friendly simulation).
@@ -92,13 +101,7 @@ Run the test suite covering authentication paths, role-based access rules, check
 python manage.py test
 ```
 
----
 
-## Demonstration Video
-
-👉 **[Watch the Demonstration Video on YouTube](https://youtu.be/Zej2gloxwcI)**
-
----
 
 ## Project Structure
 
